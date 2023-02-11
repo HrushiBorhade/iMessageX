@@ -1,3 +1,5 @@
+import { CreateUsernameData, CreateUsernameVariables } from "@/utils/types";
+import { useMutation } from "@apollo/client";
 import {
   Button,
   Center,
@@ -12,6 +14,7 @@ import { Session } from "@prisma/client";
 import { signIn } from "next-auth/react";
 import React, { useState } from "react";
 import { FaHeart } from "react-icons/fa";
+import UserOperations from "../../graphql/operations/user";
 type AuthProps = {
   session: Session | null;
   reloadSession: () => void;
@@ -19,11 +22,19 @@ type AuthProps = {
 
 const Auth: React.FC<AuthProps> = ({ session, reloadSession }) => {
   const [username, setUsername] = useState("");
+
+  const [createUsername, { loading, error, data }] = useMutation<
+    CreateUsernameData,
+    CreateUsernameVariables
+  >(UserOperations.Mutations.createUsername);
   const onSubmit = async () => {
+    if (!username) return;
     try {
+      await createUsername({ variables: { username } });
     } catch (error: any) {
       console.log("onSubmit error:", error.message);
     }
+    console.log("HERE IS DATA:", data);
   };
   return (
     <Center height="100vh">
