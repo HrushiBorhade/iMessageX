@@ -13,6 +13,7 @@ import {
 import { Session } from "@prisma/client";
 import { signIn } from "next-auth/react";
 import React, { useState } from "react";
+import toast from "react-hot-toast";
 import { FaHeart } from "react-icons/fa";
 import UserOperations from "../../graphql/operations/user";
 type AuthProps = {
@@ -23,18 +24,32 @@ type AuthProps = {
 const Auth: React.FC<AuthProps> = ({ session, reloadSession }) => {
   const [username, setUsername] = useState("");
 
-  const [createUsername, { loading, error, data }] = useMutation<
+  const [createUsername, { loading, error }] = useMutation<
     CreateUsernameData,
     CreateUsernameVariables
   >(UserOperations.Mutations.createUsername);
   const onSubmit = async () => {
     if (!username) return;
     try {
-      await createUsername({ variables: { username } });
+      const { data } = await createUsername({ variables: { username } });
+
+      if (!data?.createUsername) {
+        throw new Error();
+      }
+
+      if (data.createUsername.error) {
+        const {
+          createUsername: { error },
+        } = data;
+
+        throw new Error(error);
+      }
+      toast.success("Username successfully created! 🚀");
+      reloadSession();
     } catch (error: any) {
+      toast.error(error?.message);
       console.log("onSubmit error:", error.message);
     }
-    console.log("HERE IS DATA:", data);
   };
   return (
     <Center height="100vh">
@@ -76,7 +91,7 @@ const Auth: React.FC<AuthProps> = ({ session, reloadSession }) => {
             >
               Continue with Google
             </Button>
-            <Text fontWeight="bold" color="gray.400" align="center">
+            <Text fontWeight="medium" color="gray.50" align="center">
               By Hrushi
             </Text>
           </>
