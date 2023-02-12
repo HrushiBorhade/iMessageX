@@ -1,3 +1,5 @@
+import { SearchUsersData, SearchUsersInput } from "@/utils/types";
+import { useLazyQuery } from "@apollo/client";
 import {
   Box,
   Button,
@@ -12,7 +14,7 @@ import {
 } from "@chakra-ui/react";
 import { Session } from "next-auth";
 import React, { useState } from "react";
-
+import UserOperations from "../../../../graphql/operations/user";
 interface ConversationModal {
   isOpen: boolean;
   onClose: () => void;
@@ -28,11 +30,15 @@ const ConversationModal: React.FC<ConversationModal> = ({
   const {
     user: { id: userId },
   } = session;
-
+  const [searchUsers, { data, error, loading }] = useLazyQuery<
+    SearchUsersData,
+    SearchUsersInput
+  >(UserOperations.Queries.searchUsers);
   const onSearch = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    console.log("from modal ", username);
+    searchUsers({ variables: { username } });
   };
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }}>

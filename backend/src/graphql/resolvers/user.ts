@@ -1,7 +1,9 @@
 import { CreateUsernameResponse, GraphQLContext } from "../../utils/types";
 const resolvers = {
   Query: {
-    searchUsers: () => {},
+    searchUsers: () => {
+      console.log("Inside SEARCH USERS");
+    },
   },
   Mutation: {
     createUsername: async (
