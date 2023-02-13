@@ -15,6 +15,7 @@ import {
 import { Session } from "next-auth";
 import React, { useState } from "react";
 import UserOperations from "../../../../graphql/operations/user";
+import UserSearchList from "./UserSearchList";
 interface ConversationModal {
   isOpen: boolean;
   onClose: () => void;
@@ -64,6 +65,12 @@ const ConversationModal: React.FC<ConversationModal> = ({
                 </Button>
               </Stack>
             </form>
+            {data?.searchUsers && (
+              <UserSearchList
+                users={data.searchUsers}
+                // addParticipant={addParticipant}
+              />
+            )}
           </ModalBody>
         </ModalContent>
       </Modal>
