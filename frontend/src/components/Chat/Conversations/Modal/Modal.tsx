@@ -38,7 +38,7 @@ const ConversationModal: React.FC<ConversationModal> = ({
     event.preventDefault();
     searchUsers({ variables: { username } });
   };
-
+  console.log("HERE IS THE DATA", data);
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }}>
@@ -57,7 +57,7 @@ const ConversationModal: React.FC<ConversationModal> = ({
                 <Button
                   width="100%"
                   type="submit"
-                  // isLoading={}
+                  isLoading={loading}
                   disabled={!username}
                 >
                   Search
