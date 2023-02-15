@@ -3,12 +3,12 @@ import { SearchedUser } from "../../../../utils/types";
 
 interface UserSearchListProps {
   users: Array<SearchedUser>;
-  // addParticipant: (user: SearchedUser) => void;
+  addParticipant: (user: SearchedUser) => void;
 }
 
 const UserSearchList: React.FC<UserSearchListProps> = ({
   users,
-  // addParticipant,
+  addParticipant,
 }) => {
   return (
     <>
@@ -35,7 +35,7 @@ const UserSearchList: React.FC<UserSearchListProps> = ({
                 <Button
                   bg="brand.100"
                   _hover={{ bg: "brand.100" }}
-                  // onClick={() => addParticipant(user)}
+                  onClick={() => addParticipant(user)}
                 >
                   Select
                 </Button>

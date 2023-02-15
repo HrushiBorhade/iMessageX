@@ -1,4 +1,4 @@
-import { SearchUsersData, SearchUsersInput } from "@/utils/types";
+import { SearchedUser, SearchUsersData, SearchUsersInput } from "@/utils/types";
 import { useLazyQuery } from "@apollo/client";
 import {
   Box,
@@ -15,6 +15,7 @@ import {
 import { Session } from "next-auth";
 import React, { useState } from "react";
 import UserOperations from "../../../../graphql/operations/user";
+import Participants from "./Participants";
 import UserSearchList from "./UserSearchList";
 interface ConversationModal {
   isOpen: boolean;
@@ -28,6 +29,7 @@ const ConversationModal: React.FC<ConversationModal> = ({
   session,
 }) => {
   const [username, setUsername] = useState("");
+  const [participants, setParticipants] = useState<Array<SearchedUser>>([]);
   const {
     user: { id: userId },
   } = session;
@@ -40,6 +42,16 @@ const ConversationModal: React.FC<ConversationModal> = ({
     searchUsers({ variables: { username } });
   };
   console.log("HERE IS THE DATA", data);
+
+  const addParticipant = (user: SearchedUser) => {
+    setParticipants((prev) => [...prev, user]);
+    setUsername("");
+  };
+
+  const removeParticipant = (userId: string) => {
+    setParticipants((prev) => prev.filter((p) => p.id !== userId));
+  };
+
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose} size={{ base: "sm", md: "md" }}>
@@ -68,8 +80,26 @@ const ConversationModal: React.FC<ConversationModal> = ({
             {data?.searchUsers && (
               <UserSearchList
                 users={data.searchUsers}
-                // addParticipant={addParticipant}
+                addParticipant={addParticipant}
               />
+            )}
+            {participants.length !== 0 && (
+              <>
+                <Participants
+                  participants={participants}
+                  removeParticipant={removeParticipant}
+                />
+                {/* <Button
+                  bg="brand.100"
+                  width="100%"
+                  mt={6}
+                  _hover={{ bg: "brand.100" }}
+                  isLoading={createConversationLoading}
+                  onClick={onCreateConversation}
+                >
+                  Create Conversation
+                </Button> */}
+              </>
             )}
           </ModalBody>
         </ModalContent>
