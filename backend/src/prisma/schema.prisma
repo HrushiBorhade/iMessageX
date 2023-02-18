@@ -1,25 +1,25 @@
-generator client {
-  provider        = "prisma-client-js"
-  binaryTargets   = ["native", "darwin", "darwin-arm64"]
-}
-
 datasource db {
   provider = "mongodb"
   url      = env("MONGODB_URI")
 }
 
+generator client {
+  provider        = "prisma-client-js"
+  binaryTargets   = ["native", "darwin", "darwin-arm64"]
+}
+
 model Account {
-  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId             String
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String @db.ObjectId
   type               String
   provider           String
   providerAccountId  String
-  refresh_token      String? @db.String
-  access_token       String? @db.String
+  refresh_token      String?  @db.String
+  access_token       String?  @db.String
   expires_at         Int?
   token_type         String?
   scope              String?
-  id_token           String? @db.String
+  id_token           String?  @db.String
   session_state      String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -28,27 +28,28 @@ model Account {
 }
 
 model Session {
-  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
   sessionToken String   @unique
-  userId       String
+  userId       String @db.ObjectId
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id             String    @id @default(auto()) @map("_id") @db.ObjectId
-  name           String?
-  email          String?   @unique
-  emailVerified  DateTime?
-  image          String?
-  username       String?  @unique
-  accounts       Account[]
-  sessions       Session[]
- 
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
+  name          String?
+  email         String?   @unique
+  username      String?   @unique
+  conversations ConversationParticipant[]
+  messages      Message[]
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
 }
 
 model VerificationToken {
-  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  id  String  @id @default(auto()) @map("_id") @db.ObjectId
   identifier String
   token      String   @unique
   expires    DateTime
@@ -56,3 +57,35 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Conversation {
+  id              String  @id @default(auto()) @map("_id") @db.ObjectId
+  messages        Message[]
+  participants    ConversationParticipant[]
+  latestMessageId String? @unique @db.ObjectId
+  latestMessage   Message?  @relation(name: "latestConversationMessage", fields: [latestMessageId], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ConversationParticipant {
+  id                   String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId               String @db.ObjectId 
+  user                 User   @relation(fields: [userId], references: [id])
+  conversationId       String @db.ObjectId
+  conversation         Conversation @relation(fields: [conversationId], references: [id])
+  hasSeenLatestMessage Boolean
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Message {
+  id               String  @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId   String @db.ObjectId
+  conversation     Conversation @relation(fields: [conversationId], references: [id])
+  senderId         String @db.ObjectId
+  sender           User     @relation(fields: [senderId], references: [id])
+  body             String
+  isLatestIn       Conversation? @relation(name: "latestConversationMessage")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
