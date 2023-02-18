@@ -4,6 +4,7 @@ const typeDefs = gql`
     createConversation(participantIds: [String]): CreateConversationResponse
   }
   type CreateConversationResponse {
-    conversationId: string
+    conversationId: String
   }
 `;
+export default typeDefs;
