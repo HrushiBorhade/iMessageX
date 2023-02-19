@@ -1,10 +1,57 @@
-import { GraphQLContext } from "../../utils/types";
+import { ConversationPopulated, GraphQLContext } from "../../utils/types";
 import { ApolloError } from "apollo-server-core";
 import { Prisma } from "@prisma/client";
 const resolvers = {
   Query: {
-    conversations: async (_: any, __: any, context: GraphQLContext) => {
-      console.log("Conversations Query");
+    conversations: async (
+      _: any,
+      __: any,
+      context: GraphQLContext
+    ): Promise<Array<ConversationPopulated>> => {
+      const { session, prisma } = context;
+
+      if (!session?.user) {
+        throw new ApolloError("Not authorized");
+      }
+
+      const {
+        user: { id: userId },
+      } = session;
+
+      try {
+        /**
+         * Find all conversations that user is part of
+         */
+        const conversations = await prisma.conversation.findMany({
+          /**
+           * Below has been confirmed to be the correct
+           * query by the Prisma team. Has been confirmed
+           * that there is an issue on their end
+           * Issue seems specific to Mongo
+           */
+          // where: {
+          //   participants: {
+          //     some: {
+          //       userId: {
+          //         equals: userId,
+          //       },
+          //     },
+          //   },
+          // },
+          include: conversationPopulated,
+        });
+
+        /**
+         * Since above query does not work
+         */
+        return conversations.filter(
+          (conversation) =>
+            !!conversation.participants.find((p) => p.userId === userId)
+        );
+      } catch (error: any) {
+        console.log("conversations error", error);
+        throw new ApolloError(error?.message);
+      }
     },
   },
   Mutation: {
@@ -13,7 +60,7 @@ const resolvers = {
       args: { participantIds: Array<string> },
       context: GraphQLContext
     ): Promise<{ conversationId: string }> => {
-      const { session, prisma } = context;
+      const { session, prisma, pubsub } = context;
       const { participantIds } = args;
 
       if (!session?.user) {
@@ -39,9 +86,9 @@ const resolvers = {
           include: conversationPopulated,
         });
 
-        // pubsub.publish("CONVERSATION_CREATED", {
-        //   conversationCreated: conversation,
-        // });
+        pubsub.publish("CONVERSATION_CREATED", {
+          conversationCreated: conversation,
+        });
 
         return {
           conversationId: conversation.id,
@@ -51,6 +98,30 @@ const resolvers = {
         throw new ApolloError("Error creating conversation");
       }
     },
+  },
+  Subscription: {
+    // conversationCreated: {
+    //   subscribe: withFilter(
+    //     (_: any, __: any, context: GraphQLContext) => {
+    //       const { pubsub } = context;
+    //       return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
+    //     },
+    //     (
+    //       payload: ConversationCreatedSubscriptionPayload,
+    //       _,
+    //       context: GraphQLContext
+    //     ) => {
+    //       const { session } = context;
+    //       const {
+    //         conversationCreated: { participants },
+    //       } = payload;
+    //       const userIsParticipant = !!participants.find(
+    //         (p) => p.userId === session?.user?.id
+    //       );
+    //       return userIsParticipant;
+    //     }
+    //   ),
+    // },
   },
 };
 export const participantPopulated =
@@ -81,3 +152,17 @@ export const conversationPopulated =
   });
 
 export default resolvers;
+// function withFilter(
+//   arg0: (
+//     _: any,
+//     __: any,
+//     context: GraphQLContext
+//   ) => AsyncIterator<unknown, any, undefined>,
+//   arg1: (
+//     payload: ConversationCreatedSubscriptionPayload,
+//     _: any,
+//     context: GraphQLContext
+//   ) => boolean
+// ) {
+//   throw new Error("Function not implemented.");
+// }
