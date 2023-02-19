@@ -100,28 +100,27 @@ const resolvers = {
     },
   },
   Subscription: {
-    // conversationCreated: {
-    //   subscribe: withFilter(
-    //     (_: any, __: any, context: GraphQLContext) => {
-    //       const { pubsub } = context;
-    //       return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
-    //     },
-    //     (
-    //       payload: ConversationCreatedSubscriptionPayload,
-    //       _,
-    //       context: GraphQLContext
-    //     ) => {
-    //       const { session } = context;
-    //       const {
-    //         conversationCreated: { participants },
-    //       } = payload;
-    //       const userIsParticipant = !!participants.find(
-    //         (p) => p.userId === session?.user?.id
-    //       );
-    //       return userIsParticipant;
-    //     }
-    //   ),
-    // },
+    conversationCreated: {
+      subscribe: (_: any, __: any, context: GraphQLContext) => {
+        const { pubsub } = context;
+        return pubsub.asyncIterator(["CONVERSATION_CREATED"]);
+      },
+      // (
+      //   payload: ConversationCreatedSubscriptionPayload,
+      //   _,
+      //   context: GraphQLContext
+      // ) => {
+      //   const { session } = context;
+      //   const {
+      //     conversationCreated: { participants },
+      //   } = payload;
+      //   const userIsParticipant = !!participants.find(
+      //     (p) => p.userId === session?.user?.id
+      //   );
+      //   return userIsParticipant;
+      // },
+      // ),
+    },
   },
 };
 export const participantPopulated =
