@@ -9,13 +9,13 @@ const ConversationFields = `
       hasSeenLatestMessage
     }
     latestMessage {
+       id
+    sender {
       id
-      sender {
-        id
-        username
-      }
-      body
-      createdAt
+      username
+    }
+    body
+    createdAt
     }
     updatedAt
 `;
